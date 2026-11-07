@@ -1,0 +1,943 @@
+<title>Tuana</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@500;700&display=swap">
+<style>
+/* Layout: one column "notebook" app. Sticky header with tabs, Jerusalem-stone ground,
+   olive ink, taxi-yellow as the highlighter, sumac red for tatreez stitches & mistakes. */
+:root{
+  --stone:#ECEAE3; --paper:#F8F7F3; --ink:#1E2619; --olive:#4B5E33; --muted:#5C6454;
+  --line:#D4D1C6; --taxi:#E9B10E; --taxi-ink:#2E2300; --sumac:#A3343B; --ok:#3D7638;
+  --ok-bg:#E3EEDC; --bad-bg:#F5E1E0; --shadow:0 1px 0 rgba(30,38,25,.06),0 6px 18px -10px rgba(30,38,25,.25);
+  --f-ui:"Familjen Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-ar:"Noto Naskh Arabic","Geeza Pro","Arial",serif;
+  --f-kufi:"Reem Kufi","Noto Naskh Arabic","Geeza Pro",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --stone:#12150F; --paper:#1B1F16; --ink:#E7E5DC; --olive:#AFC285; --muted:#A2A794;
+  --line:#343A2C; --taxi:#F2C232; --taxi-ink:#241B00; --sumac:#E27A82; --ok:#8DC680;
+  --ok-bg:#1F2E1B; --bad-bg:#3A1F21; --shadow:0 1px 0 rgba(0,0,0,.3),0 8px 20px -12px rgba(0,0,0,.7); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --stone:#12150F; --paper:#1B1F16; --ink:#E7E5DC; --olive:#AFC285; --muted:#A2A794;
+  --line:#343A2C; --taxi:#F2C232; --taxi-ink:#241B00; --sumac:#E27A82; --ok:#8DC680;
+  --ok-bg:#1F2E1B; --bad-bg:#3A1F21; --shadow:0 1px 0 rgba(0,0,0,.3),0 8px 20px -12px rgba(0,0,0,.7); color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{background:var(--stone)}
+body{color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--taxi);outline-offset:2px}
+.ar{font-family:var(--f-ar);direction:rtl;unicode-bidi:isolate;line-height:1.7}
+.tr{font-family:var(--f-mono);font-size:.92em;color:var(--olive)}
+.de{color:var(--muted)}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+.eyebrow{font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.stitch{height:10px;background:var(--sumac);opacity:.85;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='10'%3E%3Cpath d='M2 2l6 6M8 2L2 8' stroke='black' stroke-width='1.8'/%3E%3Cpath d='M15 5l3-3 3 3-3 3z' fill='black'/%3E%3C/svg%3E") repeat-x left center;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='10'%3E%3Cpath d='M2 2l6 6M8 2L2 8' stroke='black' stroke-width='1.8'/%3E%3Cpath d='M15 5l3-3 3 3-3 3z' fill='black'/%3E%3C/svg%3E") repeat-x left center}
+
+/* header */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--line)}
+.bar{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{display:flex;align-items:baseline;gap:10px;margin-inline-end:auto;text-decoration:none;color:inherit}
+.logo .brand{font-family:var(--f-kufi);font-size:1.75rem;font-weight:700;color:var(--olive);line-height:1;letter-spacing:.01em}
+.logo small{font-weight:600;font-size:1rem;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:2px;background:var(--stone)}
+.seg button{border:0;background:none;padding:4px 11px;border-radius:999px;font-size:.8rem;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+nav.tabs{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav.tabs a{flex:0 0 auto;padding:10px 12px 9px;text-decoration:none;color:var(--muted);font-weight:600;font-size:.95rem;border-bottom:3px solid transparent;display:flex;gap:7px;align-items:baseline}
+nav.tabs a .ar{font-size:.85rem;line-height:1}
+nav.tabs a[aria-current="page"]{color:var(--ink);border-color:var(--taxi)}
+
+main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:22px 64px;display:flex;flex-direction:column;gap:22px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);min-width:0}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:9px 14px;font-weight:600;display:inline-flex;align-items:center;gap:8px;transition:transform .08s}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.hi{background:var(--taxi);color:var(--taxi-ink);border-color:var(--taxi)}
+.btn.ghost{background:transparent}
+.btn[disabled]{opacity:.45;cursor:default}
+.icon{width:18px;height:18px;flex:0 0 auto}
+.say{border:1px solid var(--line);background:var(--stone);border-radius:999px;width:36px;height:36px;display:inline-grid;place-items:center;padding:0;flex:0 0 auto;color:var(--olive)}
+.say.slow{width:auto;padding:0 10px;font-size:.75rem;font-weight:600;gap:4px;display:inline-flex}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 12px;font-size:.88rem;font-weight:600;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--olive);color:var(--paper);border-color:var(--olive)}
+.subtabs{display:flex;gap:6px;flex-wrap:wrap}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.pill{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.08em;padding:2px 7px;border-radius:5px;background:var(--stone);border:1px solid var(--line);color:var(--muted);vertical-align:middle}
+.pill.jo{background:var(--taxi);color:var(--taxi-ink);border-color:var(--taxi)}
+
+/* home */
+.hero{display:grid;gap:18px;grid-template-columns:minmax(0,1fr);position:relative;overflow:hidden}
+.hero .big{font-family:var(--f-ar);font-size:clamp(2.6rem,9vw,4.4rem);font-weight:600;line-height:1.3;color:var(--ink);direction:rtl}
+.hero .big mark{background:linear-gradient(transparent 58%,color-mix(in srgb,var(--taxi) 70%,transparent) 58%);color:inherit;padding:0 .08em}
+.hero .tline{font-family:var(--f-mono);font-size:1.15rem;color:var(--olive)}
+.hero .ctx{max-width:58ch}
+.go{display:flex;flex-direction:column;gap:8px;text-decoration:none;color:inherit;transition:border-color .15s}
+.go:hover{border-color:var(--olive)}
+.go h3{font-size:1.2rem;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.go h3 .ar{font-family:var(--f-kufi);font-weight:500;color:var(--olive);font-size:1.1rem}
+.prog{height:6px;border-radius:9px;background:var(--stone);border:1px solid var(--line);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--olive);border-radius:9px}
+.tips{display:grid;gap:0}
+.tips div{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr);gap:10px;padding:9px 0;border-top:1px solid var(--line);align-items:baseline}
+.tips div:first-child{border-top:0}
+.tips b{font-weight:600}
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.legend span{display:flex;gap:8px;align-items:baseline;padding:6px 8px;border:1px dashed var(--line);border-radius:8px}
+.legend b{font-family:var(--f-mono);color:var(--sumac);font-size:1.05rem}
+.streak{display:flex;gap:4px;flex-wrap:wrap}
+.streak i{width:14px;height:14px;background:var(--line);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Cpath d='M2 2l10 10M12 2L2 12' stroke='black' stroke-width='3'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Cpath d='M2 2l10 10M12 2L2 12' stroke='black' stroke-width='3'/%3E%3C/svg%3E") center/contain no-repeat}
+.streak i.on{background:var(--sumac)}
+
+/* speak / dialog */
+.scene-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.scene-list .go p{margin:0}
+.done-tag{font-size:.75rem;font-weight:700;color:var(--ok)}
+.chat{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:14px;background:var(--stone);border:1px solid var(--line);min-height:120px}
+.bub{max-width:min(88%,520px);padding:10px 13px;border-radius:14px;background:var(--paper);border:1px solid var(--line);display:flex;gap:10px;align-items:flex-start;animation:pop .25s ease-out}
+.bub .txt{min-width:0;display:flex;flex-direction:column;gap:1px}
+.bub .ar{font-size:1.35rem;line-height:1.6}
+.bub.them{align-self:flex-start;border-bottom-left-radius:4px}
+.bub.me{align-self:flex-end;background:var(--ok-bg);border-color:color-mix(in srgb,var(--ok) 35%,var(--line));border-bottom-right-radius:4px}
+.who{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.chatstyle .bub .tr{font-size:1.02rem;color:var(--ink)}
+.chatstyle .bub .ar{font-size:1rem;color:var(--muted)}
+@keyframes pop{from{opacity:.2;transform:translateY(6px)}to{opacity:1;transform:none}}
+.opts{display:grid;gap:8px}
+.opt{text-align:start;border:1px solid var(--line);background:var(--paper);border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:2px}
+.opt:hover{border-color:var(--olive)}
+.opt .ar{font-size:1.25rem;text-align:right}
+.opt.wrong{background:var(--bad-bg);border-color:var(--sumac);animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.feedback{padding:10px 14px;border-radius:10px;background:var(--bad-bg);color:var(--ink);font-size:.95rem}
+.feedback.ok{background:var(--ok-bg)}
+.sayit{border:2px dashed var(--taxi);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--taxi) 8%,var(--paper))}
+.sayit .ar{font-size:1.7rem;font-weight:600}
+
+/* read */
+.fam{display:flex;flex-direction:column;gap:6px}
+.letters{display:flex;flex-wrap:wrap;gap:8px;direction:rtl}
+.lt{width:56px;height:62px;border:1px solid var(--line);border-radius:10px;background:var(--paper);font-family:var(--f-ar);font-size:1.9rem;line-height:1;display:grid;place-items:center;position:relative;padding:0}
+.lt.seen::after{content:"";position:absolute;top:5px;left:5px;width:6px;height:6px;border-radius:50%;background:var(--ok)}
+.lt[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.ldetail{display:grid;gap:16px;grid-template-columns:minmax(0,auto) minmax(0,1fr);align-items:center}
+.lbig{font-family:var(--f-ar);font-size:6rem;line-height:1.2;color:var(--olive);text-align:center;min-width:120px}
+.forms{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;direction:rtl}
+.forms div{border:1px solid var(--line);border-radius:10px;padding:6px 4px;text-align:center;background:var(--stone)}
+.forms .ar{font-size:2rem;line-height:1.5;display:block}
+.forms small{font-size:.68rem;color:var(--muted);direction:ltr;display:block}
+.forms div.na{opacity:.35}
+.qcard{display:grid;place-items:center;min-height:170px;border-radius:14px;padding:20px;text-align:center}
+.qcard .ar{font-size:clamp(2.2rem,8vw,3.2rem);font-weight:700;line-height:1.4}
+.k-sign{background:#1F5A3A;color:#F4F4EE;border:4px solid #F4F4EE;outline:2px solid #1F5A3A}
+.k-shop{background:var(--paper);border:2px solid var(--ink)}
+.k-shop .ar{font-family:var(--f-kufi)}
+.k-menu{background:#2B2420;color:#F3E9D2;border:1px solid #2B2420}
+.k-city{background:#2F4F8F;color:#FFFFFF;border:3px solid #FFFFFF;outline:2px solid #2F4F8F}
+.qkind{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;opacity:.75;font-weight:700}
+.qopts{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))}
+.qopts .opt.right{background:var(--ok-bg);border-color:var(--ok)}
+
+/* write */
+.trace-wrap{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+.pad{position:relative;width:100%;max-width:380px;aspect-ratio:1;margin:0 auto;border-radius:16px;border:1px solid var(--line);background:var(--paper);touch-action:none;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px);background-size:100% 25%;background-position:0 -1px}
+.pad canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:16px}
+.chips-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;direction:rtl;scrollbar-width:thin}
+.chips-scroll .chip{font-family:var(--f-ar);font-size:1.1rem;padding:2px 12px;flex:0 0 auto}
+.score{font-family:var(--f-mono);font-size:1.6rem;font-weight:500}
+.slot{min-height:84px;border-radius:14px;border:2px dashed var(--line);display:grid;place-items:center;font-family:var(--f-ar);font-size:2.6rem;direction:rtl;background:var(--paper);padding:6px}
+.slot.ok{border-color:var(--ok);background:var(--ok-bg)}
+.slot.bad{border-color:var(--sumac);background:var(--bad-bg)}
+.tiles{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;direction:rtl}
+.tile{width:54px;height:58px;border-radius:10px;border:1px solid var(--line);border-bottom-width:3px;background:var(--paper);font-family:var(--f-ar);font-size:1.8rem;line-height:1;display:grid;place-items:center;padding:0}
+.tile[disabled]{opacity:.25}
+
+/* words */
+.flash{min-height:230px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;text-align:center;cursor:pointer;user-select:none}
+.flash .front{font-size:1.5rem;font-weight:600;max-width:30ch}
+.flash .ar{font-size:2.4rem;font-weight:600}
+.flash .tr{font-size:1.15rem}
+.flash .hint{font-size:.8rem;color:var(--muted)}
+.list{display:flex;flex-direction:column}
+.li{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.li:first-child{border-top:0}
+.li .ar{font-size:1.3rem;text-align:right}
+.li .meta{display:flex;flex-direction:column;min-width:0}
+.boxes{display:inline-flex;gap:3px;vertical-align:middle}
+.boxes i{width:7px;height:7px;border-radius:2px;background:var(--line)}
+.boxes i.on{background:var(--ok)}
+.note{font-size:.85rem;color:var(--muted);border-left:3px solid var(--taxi);padding-left:10px}
+
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:12px;font-size:.9rem;max-width:min(92vw,520px);z-index:20;box-shadow:var(--shadow)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (max-width:560px){
+  .ldetail{grid-template-columns:minmax(0,1fr)}
+  .li{grid-template-columns:auto minmax(0,1fr)}
+  .li .de{grid-column:2}
+  .tips div{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .tips div b{grid-column:1/-1}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header>
+  <div class="bar">
+    <a class="logo" href="#heute"><span class="brand">Tuana</span><small class="ar" lang="ar">يلا نحكي</small></a>
+    <div class="seg" role="group" aria-label="Dialekt">
+      <button id="dial-pal" data-act="dial" data-v="pal" title="Palästinensisch">Palästina</button>
+      <button id="dial-jo" data-act="dial" data-v="jo" title="Jordanisch">Jordanien</button>
+    </div>
+  </div>
+  <nav class="tabs" aria-label="Bereiche">
+    <a href="#heute">Heute</a>
+    <a href="#sprechen">Sprechen <span class="ar" lang="ar">حكي</span></a>
+    <a href="#lesen">Lesen <span class="ar" lang="ar">قراية</span></a>
+    <a href="#schreiben">Schreiben <span class="ar" lang="ar">كتابة</span></a>
+    <a href="#woerter">Wörter <span class="ar" lang="ar">كلمات</span></a>
+  </nav>
+  <div class="stitch" aria-hidden="true"></div>
+</header>
+
+<main id="app" aria-live="polite"></main>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+/* ======================= DATA ======================= */
+// [arabisch, umschrift, deutsch, notiz?, jordanische Variante [ar,tr]?]
+const VOCAB = {
+  gruss:{name:"Begrüßen & Danke",items:[
+    ["مرحبا","mar7aba","Hallo"],
+    ["أهلا وسهلا","ahlan wa sahlan","Herzlich willkommen","Antwort: ahlan fīk (zu Frau: fīki)"],
+    ["كيفك؟","kīfak?","Wie geht's dir?","Zu einer Frau: kīfik?"],
+    ["منيح، الحمدلله","mnī7, il-7amdilla","Gut, Gott sei Dank","Zu einer Frau sagt sie: mnī7a"],
+    ["تمام","tamām","Alles gut / passt"],
+    ["صباح الخير","ṣabā7 il-khēr","Guten Morgen","Antwort: ṣabā7 in-nūr"],
+    ["مسا الخير","masa l-khēr","Guten Abend","Antwort: masa n-nūr"],
+    ["شكرا","shukran","Danke"],
+    ["يسلمو","yislamu","Danke (locker)","Hörst du ständig – im Laden, im Taxi, unter Freunden."],
+    ["عفوا","3afwan","Gern geschehen / Entschuldigung"],
+    ["لو سمحت","law sama7t","Bitte / Entschuldigung (wenn man etwas will)","Zu einer Frau: law sama7ti"],
+    ["يعطيك العافية","ya3ṭīk il-3āfye","Danke für deine Arbeit","Wörtlich „Gott gebe dir Kraft“. Sagt man zu jedem, der arbeitet: Fahrer, Verkäufer, Kellner."],
+    ["الله يعافيك","aḷḷa y3āfīk","Antwort auf ya3ṭīk il-3āfye"],
+    ["مع السلامة","ma3 is-salāme","Auf Wiedersehen"],
+    ["يلا باي","yalla bāy","Tschüss (locker)"]
+  ]},
+  reakt:{name:"Alltags-Reaktionen",items:[
+    ["يلا","yalla","Los geht's / Komm schon","Das wichtigste Wort überhaupt."],
+    ["خلص","khalaṣ","Fertig / Genug / Abgemacht"],
+    ["ماشي","māshi","Okay, passt"],
+    ["والله؟","wallah?","Echt jetzt?","Als Aussage: „Ich schwör“ – wallah zāki = ich schwör, lecker."],
+    ["عن جد؟","3an jadd?","Im Ernst?"],
+    ["ولا يهمك","wala yhimmak","Keine Sorge, kein Ding"],
+    ["مش مشكلة","mish mushkile","Kein Problem"],
+    ["إن شاء الله","inshalla","Hoffentlich / So Gott will"],
+    ["يا حرام","ya 7arām","Oh nein, der/die Arme"],
+    ["هيك هيك","hēk hēk","So lala"],
+    ["بعرفش","ba3rafish","Weiß nicht","In Jordanien eher: ma ba3raf",["ما بعرف","ma ba3raf"]],
+    ["شو يعني؟","shu ya3ni?","Was heißt das?","ya3ni allein ist auch das typische Füllwort: „also, sozusagen“."],
+    ["معلش","ma3lesh","Macht nichts / Sorry"],
+    ["صحتين","ṣa7tēn","Guten Appetit / Wohl bekomm's","Antwort: 3ala 2albak (auf dein Herz)"],
+    ["تسلم إيدك","tislam īdak","Danke fürs Kochen","Wörtlich „deine Hand sei gesegnet“. Zu einer Frau: tislam īdik"],
+    ["نعيماً","na3īman","„Wohlsein!“ nach Dusche oder Friseur","Antwort: aḷḷa yin3im 3alēk"],
+    ["ما شاء الله","māshalla","Wow, toll! (Bewunderung)"],
+    ["يا زلمة","ya zalame","Alter! / Mann!","Unter Männern, für Staunen oder Ärger."]
+  ]},
+  essen:{name:"Essen & Trinken",items:[
+    ["بدّي...","biddi...","Ich möchte ...","Du möchtest: biddak (m) / biddik (f)"],
+    ["ساندويشة فلافل","sandwīshit falāfel","Falafel-Sandwich"],
+    ["صحن حمص","ṣa7n 7ummuṣ","Ein Teller Hummus"],
+    ["بدون بصل","bidūn baṣal","Ohne Zwiebeln"],
+    ["مع كل إشي","ma3 kull ishi","Mit allem"],
+    ["شاي بنعنع","shāy bi-na3na3","Tee mit Minze"],
+    ["قهوة سادة","ahwe sāda","Kaffee ohne Zucker","Arabischer Kaffee mit Kardamom",["قهوة سادة","gahwa sāda"]],
+    ["سكر خفيف","sukkar khafīf","Wenig Zucker","Auch: sukkar wasaṭ (mittel), sukkar ziyāde (viel)"],
+    ["زاكي كتير","zāki ktīr","Sehr lecker"],
+    ["مَي","mayy","Wasser"],
+    ["خبز","khubz","Brot"],
+    ["كنافة","knāfe","Knafeh (Süßspeise)","Am besten aus Nablus, sagt man.",["كنافة","knāfa"]],
+    ["الحساب لو سمحت","il-7sāb law sama7t","Die Rechnung, bitte"],
+    ["عزومة","3azūme","Einladung zum Essen","Wenn jemand „3alayy!“ ruft, will er dich einladen."]
+  ]},
+  weg:{name:"Unterwegs & Taxi",items:[
+    ["وين...؟","wēn...?","Wo ist ...?"],
+    ["وصّلني على...","waṣṣilni 3ala...","Bring mich zu ..."],
+    ["دغري","dughri","Geradeaus"],
+    ["يمين / شمال","yamīn / shmāl","Rechts / links"],
+    ["وقّف هون","wa22if hōn","Halt hier",null,["وقّف هون","waggif hōn"]],
+    ["قدّيش الأجرة؟","2addēsh il-ujra?","Was kostet die Fahrt?",null,["قدّيش الأجرة؟","gaddēsh il-ujra?"]],
+    ["بعيد؟","b3īd?","Ist es weit?"],
+    ["قريب","2arīb","Nah",null,["قريب","garīb"]],
+    ["عالدوار","3a-d-dawwār","Am Kreisverkehr","In Amman orientiert man sich an den nummerierten Kreisverkehren."],
+    ["الإشارة","il-ishāra","Die Ampel"],
+    ["هون / هناك","hōn / hnāk","Hier / dort"],
+    ["سرفيس","servīs","Sammeltaxi","Fährt eine feste Strecke, man teilt es mit anderen."]
+  ]},
+  leute:{name:"Familie & Leute",items:[
+    ["يمّا","yamma","Mama"],
+    ["يابا","yaba","Papa"],
+    ["تيتا","tēta","Oma"],
+    ["سيدو","sīdo","Opa"],
+    ["أخوي","akhūy","Mein Bruder"],
+    ["أختي","ukhti","Meine Schwester"],
+    ["صاحبي","ṣā7bi","Mein Kumpel","Freundin: ṣa7bti"],
+    ["جوزي / مرتي","jōzi / marti","Mein Mann / meine Frau"],
+    ["خالتو","khālto","Tante","Auch respektvoll für ältere Frauen, die du nicht kennst."],
+    ["عمّو","3ammo","Onkel","Auch respektvoll für ältere Männer."],
+    ["حبيبي / حبيبتي","7abībi / 7abībti","Mein Schatz / Lieber","Hört man überall, auch unter Freunden."]
+  ]},
+  fragen:{name:"Fragen & Zeit",items:[
+    ["شو؟","shu?","Was?"],
+    ["وين؟","wēn?","Wo?"],
+    ["ليش؟","lēsh?","Warum?"],
+    ["إمتى؟","imta?","Wann?"],
+    ["مين؟","mīn?","Wer?"],
+    ["كيف؟","kīf?","Wie?"],
+    ["قدّيش؟","2addēsh?","Wie viel?",null,["قدّيش؟","gaddēsh?"]],
+    ["هلّأ","halla2","Jetzt","In Jordanien: hassa",["هسّا","hassa"]],
+    ["بكرا","bukra","Morgen"],
+    ["مبارح","mbāri7","Gestern"],
+    ["لسّا","lissa","Noch / noch nicht"],
+    ["بعدين","ba3dēn","Später / danach"],
+    ["شوي شوي","shwayy shwayy","Langsam / nach und nach"]
+  ]},
+  zahlen:{name:"Zahlen & Preise",items:[
+    ["واحد ١","wā7ad","1"],["تنين ٢","tnēn","2"],["تلاتة ٣","tlāte","3"],["أربعة ٤","arba3a","4"],
+    ["خمسة ٥","khamse","5"],["ستة ٦","sitte","6"],["سبعة ٧","sab3a","7"],["تمانية ٨","tamānye","8"],
+    ["تسعة ٩","tis3a","9"],["عشرة ١٠","3ashara","10"],["عشرين ٢٠","3ishrīn","20"],["مية ١٠٠","mīye","100"],
+    ["نص دينار","nuṣṣ dīnār","Ein halber Dinar","Jordanische Währung"],
+    ["خمسة شيكل","khamse shēkel","Fünf Schekel","In Palästina zahlt man meist in Schekel."]
+  ]}
+};
+const DAILY_POOL = ["reakt","gruss"];
+
+const SCENES = [
+ {id:"kennen",title:"Jemanden kennenlernen",place:"Auf einer Hochzeit, Ahmad setzt sich neben dich",who:"Ahmad",lines:[
+  {ar:"مرحبا! شو اسمك؟",tr:"mar7aba! shu ismak?",de:"Hallo! Wie heißt du?"},
+  {me:1,ar:"اسمي ماكس، وانت؟",tr:"ismi Max, w-inta?",de:"Ich heiße Max, und du?",wrong:[
+    ["منيح، الحمدلله","mnī7, il-7amdilla","Gut, Gott sei Dank","Das ist die Antwort auf „kīfak?“ – er wollte deinen Namen."],
+    ["من ألمانيا","min almānya","Aus Deutschland","Das kommt gleich. Zuerst der Name."]]},
+  {ar:"أنا أحمد. من وين انت؟",tr:"ana a7mad. min wēn inta?",de:"Ich bin Ahmad. Woher kommst du?"},
+  {me:1,ar:"أنا من ألمانيا",tr:"ana min almānya",de:"Ich komme aus Deutschland.",wrong:[
+    ["أنا بالبيت","ana bil-bēt","Ich bin zuhause","Er fragt, woher du kommst – nicht, wo du gerade bist."],
+    ["أنا منيح","ana mnī7","Mir geht's gut","Gefragt war „min wēn“ – woher."]]},
+  {ar:"أهلا وسهلا! بتحكي عربي؟",tr:"ahlan wa sahlan! bti7ki 3arabi?",de:"Willkommen! Sprichst du Arabisch?"},
+  {me:1,ar:"شوي شوي، لسّا بتعلّم",tr:"shwayy shwayy, lissa bat3allam",de:"Ein bisschen, ich lerne noch.",wrong:[
+    ["لأ، ولا كلمة","la2, wala kilme","Nein, kein Wort","Stimmt nicht mehr – du redest ja gerade Arabisch."],
+    ["زاكي كتير","zāki ktīr","Sehr lecker","„zāki“ sagt man über Essen."]]},
+  {ar:"ما شاء الله، كلامك منيح!",tr:"māshalla, kalāmak mnī7!",de:"Wow, du sprichst gut!"},
+  {me:1,ar:"يسلمو!",tr:"yislamu!",de:"Danke!",wrong:[
+    ["ولا يهمك","wala yhimmak","Keine Sorge","Das sagt man, wenn sich jemand entschuldigt. Auf ein Kompliment: danke."],
+    ["نعيماً","na3īman","Wohlsein (nach dem Duschen)","Das sagt man nach Dusche oder Friseur."]]}
+ ]},
+ {id:"falafel",title:"Falafel zum Frühstück",place:"Falafel-Stand, sieben Uhr morgens",who:"Verkäufer",lines:[
+  {ar:"صباح الخير، شو بدّك؟",tr:"ṣabā7 il-khēr, shu biddak?",de:"Guten Morgen, was möchtest du?"},
+  {me:1,ar:"صباح النور، بدّي ساندويشة فلافل",tr:"ṣabā7 in-nūr, biddi sandwīshit falāfel",de:"Guten Morgen, ich möchte ein Falafel-Sandwich.",wrong:[
+    ["مسا النور، بدّي ساندويشة فلافل","masa n-nūr, biddi sandwīshit falāfel","Guten Abend, ein Falafel-Sandwich","Auf „ṣabā7 il-khēr“ antwortet man mit „ṣabā7 in-nūr“."],
+    ["مع السلامة","ma3 is-salāme","Auf Wiedersehen","Du willst doch erst bestellen."]]},
+  {ar:"مع كل إشي؟",tr:"ma3 kull ishi?",de:"Mit allem?"},
+  {me:1,ar:"آه، بس بدون بصل",tr:"āh, bass bidūn baṣal",de:"Ja, aber ohne Zwiebeln.",wrong:[
+    ["قدّيش الساعة؟","2addēsh is-sā3a?","Wie spät ist es?","Passt nicht zur Frage."],
+    ["لأ، مع السلامة","la2, ma3 is-salāme","Nein, tschüss","Dann gibt's kein Frühstück."]]},
+  {ar:"حار ولا لأ؟",tr:"7ārr walla la2?",de:"Scharf oder nicht?"},
+  {me:1,ar:"شوي حار",tr:"shwayy 7ārr",de:"Ein bisschen scharf.",wrong:[
+    ["شوي بارد","shwayy bārid","Ein bisschen kalt","„bārid“ heißt kalt. Gefragt war: scharf?"],
+    ["كتير منيح","ktīr mnī7","Sehr gut","Er will wissen: scharf oder nicht."]]},
+  {ar:"تفضّل",tr:"tfaḍḍal",de:"Bitte schön (hier, nimm)."},
+  {me:1,ar:"يسلمو، قدّيش؟",tr:"yislamu, 2addēsh?",de:"Danke, wie viel?",jo:{tr:"yislamu, gaddēsh?"},wrong:[
+    ["وين الحمام؟","wēn il-7ammām?","Wo ist die Toilette?","Erst bezahlen."],
+    ["شو اسمك؟","shu ismak?","Wie heißt du?","Nett, aber du wolltest bezahlen."]]},
+  {ar:"خمسة شيكل",tr:"khamse shēkel",de:"Fünf Schekel.",jo:{ar:"نص دينار",tr:"nuṣṣ dīnār",de:"Einen halben Dinar."}},
+  {me:1,ar:"تفضّل، يعطيك العافية",tr:"tfaḍḍal, ya3ṭīk il-3āfye",de:"Bitte, danke für deine Arbeit.",wrong:[
+    ["صحتين","ṣa7tēn","Guten Appetit","„ṣa7tēn“ sagt der Verkäufer zu dir, nicht umgekehrt."],
+    ["نعيماً","na3īman","Wohlsein (nach dem Duschen)","Das sagt man nach Dusche oder Friseur."]]},
+  {ar:"الله يعافيك، صحتين!",tr:"aḷḷa y3āfīk, ṣa7tēn!",de:"Danke dir, guten Appetit!"}
+ ]},
+ {id:"servis",title:"Im Sammeltaxi",place:"Ein Servīs Richtung Stadtzentrum",who:"Fahrer",lines:[
+  {me:1,ar:"مرحبا، بتروح عالبلد؟",tr:"mar7aba, btrū7 3al-balad?",de:"Hallo, fährst du ins Zentrum? (il-balad = Altstadt/Downtown)",wrong:[
+    ["مرحبا، بتحكي ألماني؟","mar7aba, bti7ki almāni?","Sprichst du Deutsch?","Frag lieber, wohin er fährt."],
+    ["صباح النور","ṣabā7 in-nūr","Guten Morgen (Antwort)","Das ist die Antwort auf „ṣabā7 il-khēr“, keine Begrüßung."]]},
+  {ar:"آه، اطلع",tr:"āh, iṭla3",de:"Ja, steig ein."},
+  {ar:"وين بالزبط؟",tr:"wēn bi-z-zabṭ?",de:"Wo genau?"},
+  {me:1,ar:"عند الدوار التاني",tr:"3ind id-dawwār it-tāni",de:"Am zweiten Kreisverkehr.",wrong:[
+    ["بكرا الصبح","bukra iṣ-ṣub7","Morgen früh","Er fragt wo, nicht wann."],
+    ["عشرة","3ashara","Zehn","Das ist eine Zahl, kein Ort."]]},
+  {ar:"ماشي",tr:"māshi",de:"Alles klar."},
+  {me:1,ar:"وقّف هون لو سمحت",tr:"wa22if hōn law sama7t",de:"Halt bitte hier.",jo:{tr:"waggif hōn law sama7t"},wrong:[
+    ["لف يمين","liff yamīn","Bieg rechts ab","Du willst aussteigen, nicht abbiegen."],
+    ["دغري دغري","dughri dughri","Immer geradeaus","Dann fährst du am Ziel vorbei."]]},
+  {me:1,ar:"قدّيش الأجرة؟",tr:"2addēsh il-ujra?",de:"Was kostet die Fahrt?",jo:{tr:"gaddēsh il-ujra?"},wrong:[
+    ["قدّيش عمرك؟","2addēsh 3umrak?","Wie alt bist du?","Lustig, aber du wolltest den Preis."],
+    ["وين الأجرة؟","wēn il-ujra?","Wo ist der Fahrpreis?","Nach Preisen fragt man mit „2addēsh“."]]},
+  {ar:"خمسة شيكل",tr:"khamse shēkel",de:"Fünf Schekel.",jo:{ar:"نص دينار",tr:"nuṣṣ dīnār",de:"Einen halben Dinar."}},
+  {me:1,ar:"يعطيك العافية",tr:"ya3ṭīk il-3āfye",de:"Danke für die Fahrt.",wrong:[
+    ["تسلم إيدك","tislam īdak","Danke fürs Kochen","Das sagt man vor allem für Essen."],
+    ["إن شاء الله","inshalla","So Gott will","Passt hier nicht als Dank."]]},
+  {ar:"الله يعافيك",tr:"aḷḷa y3āfīk",de:"Dir auch."}
+ ]},
+ {id:"teta",title:"Besuch bei Teta",place:"Wohnzimmer, es riecht nach Maqlube",who:"Teta",lines:[
+  {ar:"أهلا أهلا! كيفك يا حبيبي؟",tr:"ahlan ahlan! kīfak ya 7abībi?",de:"Hallo, hallo! Wie geht's dir, mein Schatz?"},
+  {me:1,ar:"منيح، الحمدلله. وانتي كيفك يا تيتا؟",tr:"mnī7, il-7amdilla. w-inti kīfik ya tēta?",de:"Gut, Gott sei Dank. Und wie geht's dir, Oma?",wrong:[
+    ["منيح، وانت كيفك؟","mnī7, w-inta kīfak?","Gut, und dir? (zu einem Mann)","„inta / kīfak“ ist männlich. Zu Teta: „inti / kīfik“."],
+    ["مع السلامة يا تيتا","ma3 is-salāme ya tēta","Tschüss, Oma","Du bist doch gerade erst gekommen."]]},
+  {ar:"الحمدلله. اقعد، بدّك قهوة؟",tr:"il-7amdilla. u23ud, biddak ahwe?",de:"Gott sei Dank. Setz dich, willst du Kaffee?",jo:{tr:"il-7amdilla. ug3ud, biddak gahwa?"}},
+  {me:1,ar:"آه، بس سكر خفيف",tr:"āh, bass sukkar khafīf",de:"Ja, aber mit wenig Zucker.",wrong:[
+    ["لأ، بدّي أروح","la2, biddi arū7","Nein, ich will gehen","Bei Teta lehnt man Kaffee nicht so schnell ab."],
+    ["بدّي ساندويشة فلافل","biddi sandwīshit falāfel","Ich will ein Falafel-Sandwich","Teta ist kein Falafel-Stand."]]},
+  {ar:"كُل! ليش ما بتوكل؟",tr:"kul! lēsh ma btōkil?",de:"Iss! Warum isst du nichts?"},
+  {me:1,ar:"والله شبعت، تسلم إيدك",tr:"wallah shbi3t, tislam īdik",de:"Ehrlich, ich bin satt. Danke fürs Kochen!",wrong:[
+    ["مش زاكي","mish zāki","Schmeckt nicht","Das sagt man Teta niemals."],
+    ["بعدين","ba3dēn","Später","Dann füllt sie dir sofort nach."]]},
+  {ar:"صحتين على قلبك",tr:"ṣa7tēn 3ala 2albak",de:"Wohl bekomm's, mein Lieber.",jo:{tr:"ṣa7tēn 3ala galbak"}}
+ ]},
+ {id:"whatsapp",title:"WhatsApp mit Lina",place:"Abends auf dem Handy – so wird wirklich getippt",who:"Lina",chat:true,lines:[
+  {ar:"شو، وينك؟",tr:"shu, wēnak?",de:"Na, wo bist du?"},
+  {me:1,ar:"بالبيت، ليش؟",tr:"bil-bēt, lēsh?",de:"Zuhause, wieso?",wrong:[
+    ["بكرا","bukra","Morgen","Sie fragt wo, nicht wann."],
+    ["منيح","mnī7","Gut","Passt nicht zu „wo bist du?“"]]},
+  {ar:"بدنا نطلع عالقهوة، بتيجي؟",tr:"biddna niṭla3 3al-ahwe, btīji?",de:"Wir gehen ins Café, kommst du mit?",jo:{tr:"biddna niṭla3 3al-gahwa, btīji?"}},
+  {me:1,ar:"أكيد! إمتى؟",tr:"akīd! imta?",de:"Klar! Wann?",wrong:[
+    ["مين إنتي؟","mīn inti?","Wer bist du?","Das ist doch Lina."],
+    ["عن جد؟","3an jadd?","Im Ernst?","Kein Grund zu staunen – sag zu oder ab."]]},
+  {ar:"بعد ساعة، عند الدوار",tr:"ba3d sā3a, 3ind id-dawwār",de:"In einer Stunde, am Kreisverkehr."},
+  {me:1,ar:"تمام، يلا بشوفكم",tr:"tamām, yalla bashūfkum",de:"Passt, bis gleich (wörtl. ich seh euch).",wrong:[
+    ["صباح الخير","ṣabā7 il-khēr","Guten Morgen","Es ist Abend."],
+    ["معلش","ma3lesh","Sorry","Du hast nichts falsch gemacht."]]},
+  {ar:"يلا باي",tr:"yalla bāy",de:"Tschüss!"}
+ ]},
+ {id:"souq",title:"Handeln im Souq",place:"Altstadt-Markt, ein Stand mit Tüchern",who:"Händler",lines:[
+  {ar:"أهلا، تفضّل، شو حابب؟",tr:"ahlan, tfaḍḍal, shu 7ābib?",de:"Hallo, komm rein, was gefällt dir?"},
+  {me:1,ar:"قدّيش هاد؟",tr:"2addēsh hād?",de:"Was kostet das?",jo:{tr:"gaddēsh hād?"},wrong:[
+    ["شو هاد؟","shu hād?","Was ist das?","Du willst den Preis wissen."],
+    ["وين هاد؟","wēn hād?","Wo ist das?","Es liegt direkt vor dir."]]},
+  {ar:"عشرين",tr:"3ishrīn",de:"Zwanzig."},
+  {me:1,ar:"غالي كتير! نزّل شوي",tr:"ghāli ktīr! nazzil shwayy",de:"Viel zu teuer! Geh etwas runter.",wrong:[
+    ["رخيص كتير!","rkhīṣ ktīr!","Sehr billig!","Dann zahlst du den vollen Preis."],
+    ["زاكي كتير","zāki ktīr","Sehr lecker","„zāki“ ist für Essen."]]},
+  {ar:"عشانك، خمستعش",tr:"3ashānak, khamsta3sh",de:"Für dich: fünfzehn."},
+  {me:1,ar:"بعطيك عشرة",tr:"ba3ṭīk 3ashara",de:"Ich geb dir zehn.",wrong:[
+    ["بعطيك تلاتين","ba3ṭīk tlātīn","Ich geb dir dreißig","Beim Handeln geht man runter, nicht rauf."],
+    ["خلص، عشرين","khalaṣ, 3ishrīn","Okay, zwanzig","Du gibst zu früh auf."]]},
+  {ar:"لأ والله ما بزبط… خلص، اتنعش",tr:"la2 wallah ma bizbaṭ… khalaṣ, itna3sh",de:"Nein, das geht nicht … na gut, zwölf."},
+  {me:1,ar:"ماشي، اتفقنا",tr:"māshi, ittafa2na",de:"Okay, abgemacht.",jo:{tr:"māshi, ittafagna"},wrong:[
+    ["لأ، مع السلامة","la2, ma3 is-salāme","Nein, tschüss","Zwölf ist ein guter Deal."],
+    ["عن جد؟ عشرين؟","3an jadd? 3ishrīn?","Im Ernst? Zwanzig?","Er hat zwölf gesagt."]]},
+  {ar:"مبروك، الله يهنّيك",tr:"mabrūk, aḷḷa yhannīk",de:"Glückwunsch, viel Freude damit."}
+ ]}
+];
+
+// Buchstaben nach Formfamilien (gleiche Grundform, andere Punkte)
+const FAMILIES = [
+ {name:"Die Zahn-Familie",hint:"Gleiche Schale, nur die Punkte entscheiden.",letters:[
+  {c:"ب",n:"bā'",s:"b",ex:["بيت","bēt","Haus"]},
+  {c:"ت",n:"tā'",s:"t",ex:["تيتا","tēta","Oma"]},
+  {c:"ث",n:"thā'",s:"th wie engl. „think“",d:"Im Alltag meist t oder s: ثلج → talj (Schnee).",ex:["ثلج","talj","Schnee"]},
+  {c:"ن",n:"nūn",s:"n",ex:["نعنع","na3na3","Minze"]},
+  {c:"ي",n:"yā'",s:"y oder langes ī",ex:["يلا","yalla","los"]}]},
+ {name:"Die Haken-Familie",hint:"Punkt unten, ohne Punkt, Punkt oben.",letters:[
+  {c:"ج",n:"jīm",s:"dsch / weiches j wie in „Journal“",ex:["جاج","jāj","Hähnchen"]},
+  {c:"ح",n:"7ā'",s:"7 – kräftig gehauchtes h aus dem Rachen",ex:["حمص","7ummuṣ","Hummus"]},
+  {c:"خ",n:"khā'",s:"kh – ch wie in „Bach“",ex:["خبز","khubz","Brot"]}]},
+ {name:"Die Winkel",hint:"Verbinden sich nicht nach links.",letters:[
+  {c:"د",n:"dāl",s:"d",ex:["دغري","dughri","geradeaus"]},
+  {c:"ذ",n:"dhāl",s:"th wie engl. „this“",d:"Im Alltag meist d oder z: ذهب → dahab (Gold).",ex:["ذهب","dahab","Gold"]}]},
+ {name:"Die Bögen",hint:"Fallen unter die Linie, verbinden sich nicht nach links.",letters:[
+  {c:"ر",n:"rā'",s:"gerolltes r",ex:["رام الله","rāmaḷḷa","Ramallah"]},
+  {c:"ز",n:"zāy",s:"weiches s wie in „Sonne“",ex:["زاكي","zāki","lecker"]}]},
+ {name:"Die Zacken",hint:"Drei Zähne. Mit drei Punkten wird's „sch“.",letters:[
+  {c:"س",n:"sīn",s:"scharfes s wie in „Haus“",ex:["سوق","sū2","Markt"]},
+  {c:"ش",n:"shīn",s:"sch",ex:["شاي","shāy","Tee"]}]},
+ {name:"Die Schleifen",hint:"Dunkle, „schwere“ Laute mit hinten gezogener Zunge.",letters:[
+  {c:"ص",n:"ṣād",s:"dunkles s",ex:["صحتين","ṣa7tēn","guten Appetit"]},
+  {c:"ض",n:"ḍād",s:"dunkles d",ex:["ضيف","ḍēf","Gast"]}]},
+ {name:"Die Fahnen",hint:"Schleife mit senkrechtem Strich.",letters:[
+  {c:"ط",n:"ṭā'",s:"dunkles t",ex:["طاولة","ṭāwle","Tisch"]},
+  {c:"ظ",n:"ẓā'",s:"dunkles z / d",d:"Im Alltag meist ḍ oder ẓ.",ex:["ظريف","ẓarīf","nett, lustig"]}]},
+ {name:"Die Kehllaute",hint:"Die zwei Laute, die es im Deutschen nicht gibt.",letters:[
+  {c:"ع",n:"3ayn",s:"3 – gepresster Laut tief aus der Kehle",ex:["عربي","3arabi","Arabisch"]},
+  {c:"غ",n:"ghayn",s:"gh – Rachen-r wie im Französischen",ex:["غالي","ghāli","teuer"]}]},
+ {name:"Die Köpfchen",hint:"Ein Punkt: f. Zwei Punkte: q.",letters:[
+  {c:"ف",n:"fā'",s:"f",ex:["فلافل","falāfel","Falafel"]},
+  {c:"ق",n:"qāf",s:"In der Stadt: Stimmabsatz (2). Jordanien & Land: g.",d:"قهوة → ahwe (Stadt) / gahwa (Jordanien). In manchen palästinensischen Dörfern: k.",ex:["قهوة","ahwe / gahwa","Kaffee"]}]},
+ {name:"Die Einzelgänger",hint:"Eigene Formen – kommen ständig vor.",letters:[
+  {c:"ا",n:"alif",s:"langes ā, oder Träger für a/i/u",ex:["أهلا","ahlan","hallo"]},
+  {c:"ل",n:"lām",s:"l",ex:["لأ","la2","nein"]},
+  {c:"ك",n:"kāf",s:"k",ex:["كتير","ktīr","viel, sehr"]},
+  {c:"م",n:"mīm",s:"m",ex:["مَي","mayy","Wasser"]},
+  {c:"ه",n:"hā'",s:"h",ex:["هون","hōn","hier"]},
+  {c:"و",n:"wāw",s:"w, oder langes ū / ō",ex:["وين","wēn","wo"]},
+  {c:"ة",n:"tā' marbūṭa",s:"nur am Wortende, klingt wie -e / -a",ex:["كنافة","knāfe","Knafeh"]}]}
+];
+const NON_JOIN = new Set(["ا","د","ذ","ر","ز","و","ة"]);
+const ALL_LETTERS = FAMILIES.flatMap(f=>f.letters);
+
+const READ_ITEMS = [
+ ["فلافل","falāfel","Falafel","menu"],["شاورما","shāwerma","Schawarma","menu"],["حمص","7ummuṣ","Hummus","menu"],
+ ["كنافة","knāfe","Knafeh","menu"],["قهوة","ahwe","Kaffee","menu"],["شاي","shāy","Tee","menu"],["عصير","3aṣīr","Saft","menu"],
+ ["مخبز","makhbaz","Bäckerei","shop"],["صيدلية","ṣaydaliyye","Apotheke","shop"],["مطعم","maṭ3am","Restaurant","shop"],["سوق","sū2","Markt","shop"],
+ ["مفتوح","maftū7","Geöffnet","sign"],["مسكّر","msakkar","Geschlossen","sign"],["دخول","dukhūl","Eingang","sign"],["خروج","khurūj","Ausgang","sign"],
+ ["ممنوع التدخين","mamnū3 it-tadkhīn","Rauchen verboten","sign"],
+ ["عمّان","3ammān","Amman","city"],["القدس","il-quds","Jerusalem","city"],["رام الله","rāmaḷḷa","Ramallah","city"],["نابلس","nāblus","Nablus","city"],
+ ["إربد","irbid","Irbid","city"],["الخليل","il-khalīl","Hebron","city"],["يافا","yāfa","Jaffa","city"],["غزة","ghazze","Gaza","city"],
+ ["العقبة","il-3a2aba","Aqaba","city"],["الزرقاء","iz-zar2a","Zarqa","city"],["جنين","jinīn","Jenin","city"]
+];
+const KIND_LABEL = {menu:"Speisekarte",shop:"Ladenschild",sign:"Schild",city:"Straßenschild"};
+
+const TRACE_WORDS = ["يلا","شو","وين","شاي","مرحبا","كيفك","حبيبي","خلص"];
+const BUILD_WORDS = [
+ ["شاي","shāy","Tee"],["يلا","yalla","Los geht's"],["شو","shu","Was?"],["وين","wēn","Wo?"],["بيت","bēt","Haus"],
+ ["خبز","khubz","Brot"],["حمص","7ummuṣ","Hummus"],["سوق","sū2","Markt"],["شكرا","shukran","Danke"],["كيفك","kīfak","Wie geht's?"],
+ ["منيح","mnī7","Gut"],["تمام","tamām","Passt"],["ماشي","māshi","Okay"],["خلص","khalaṣ","Fertig"],["بكرا","bukra","Morgen"],
+ ["هون","hōn","Hier"],["فلافل","falāfel","Falafel"],["كتير","ktīr","Sehr"],["ليش","lēsh","Warum?"],["مين","mīn","Wer?"]
+];
+
+/* ======================= STATE ======================= */
+const KEY="yalla-nihki-v1";
+const blank=()=>({prefs:{dial:"pal",slow:false,showDe:true},cards:{},scenes:{},letters:{},traced:{},built:{},quizBest:0,days:[],t:0});
+let S=blank();
+try{const raw=localStorage.getItem(KEY); if(raw) S=Object.assign(blank(),JSON.parse(raw));}catch(e){}
+let dbDoc=null, saveTimer=null;
+function save(){
+  S.t=Date.now();
+  try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  if(dbDoc){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{dbDoc.set({state:JSON.stringify(S)}).catch(()=>{});},1500);}
+}
+function today(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function touch(){const t=today(); if(!S.days.includes(t)){S.days.push(t); S.days=S.days.slice(-60);} save();}
+function mergeStates(a,b){ // keep the best of both (progress never goes backwards)
+  const m=blank(); m.prefs=(a.t>=b.t?a:b).prefs;
+  for(const k of ["scenes","letters","traced","built"]) m[k]=Object.assign({},b[k],a[k]);
+  m.cards=Object.assign({},b.cards); for(const [k,v] of Object.entries(a.cards||{})) m.cards[k]=Math.max(v,m.cards[k]||0);
+  m.quizBest=Math.max(a.quizBest||0,b.quizBest||0);
+  m.days=[...new Set([...(a.days||[]),...(b.days||[])])].sort().slice(-60); m.t=Math.max(a.t||0,b.t||0); return m;
+}
+(async()=>{ // optional cloud sync of progress (private per person)
+  try{
+    if(!window.claude||!window.claude.use) return;
+    const [db,user]=await Promise.all([window.claude.use("db"),window.claude.use("user")]);
+    if(!db||!user) return; const id=await user.id(); if(!id) return;
+    const ref=db.collection("data/users/"+id).doc("progress");
+    const snap=await ref.get(); const d=snap&&snap.data&&snap.data();
+    if(d&&d.state){S=mergeStates(S,Object.assign(blank(),JSON.parse(d.state))); try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} render();}
+    dbDoc=ref;
+  }catch(e){}
+})();
+
+/* ======================= HELPERS ======================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
+const JO=()=>S.prefs.dial==="jo";
+function vItem(it){ // vocab tuple → {ar,tr,de,note,other}
+  const [ar,tr,de,note,jo]=it; const base={ar,tr,de,note:note||""};
+  if(!jo) return base;
+  return JO()?{...base,ar:jo[0],tr:jo[1],other:{label:"In Palästina",ar,tr}}:{...base,other:{label:"In Jordanien",ar:jo[0],tr:jo[1]}};
+}
+function vLine(l){return JO()&&l.jo?{...l,...l.jo}:l;}
+const SPK='<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+const sayBtn=(ar,label="Anhören")=>`<button class="say" data-act="say" data-t="${esc(ar)}" aria-label="${label}" title="${label}">${SPK}</button>`;
+const slowBtn=ar=>`<button class="say slow" data-act="say" data-slow="1" data-t="${esc(ar)}" title="Langsam anhören">${SPK}langsam</button>`;
+let toastT; function toast(msg,ms=3200){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,ms);}
+
+/* ---- speech ---- */
+let voice=null, warned=false;
+function pickVoice(){
+  if(!("speechSynthesis" in window)) return null;
+  const vs=speechSynthesis.getVoices().filter(v=>/^ar/i.test(v.lang));
+  const pref=["ar-JO","ar-PS","ar-LB","ar-SY","ar-AE","ar-SA","ar-001","ar-EG"];
+  for(const p of pref){const v=vs.find(x=>x.lang.replace("_","-").toLowerCase()===p.toLowerCase()); if(v) return v;}
+  return vs[0]||null;
+}
+if("speechSynthesis" in window){speechSynthesis.onvoiceschanged=()=>{voice=pickVoice();}; voice=pickVoice();}
+function speak(text,slow){
+  if(!("speechSynthesis" in window)){toast("Dieser Browser kann nicht vorlesen.");return;}
+  voice=voice||pickVoice();
+  if(!voice&&!warned){warned=true;toast("Keine arabische Stimme gefunden. Auf dem Mac: Systemeinstellungen › Bedienungshilfen › Gesprochene Inhalte › Systemstimme › Stimmen verwalten › Arabisch.",7000);}
+  const clean=String(text).split(" / ")[0].replace(/\.\.\.|…/g," ").replace(/[٠-٩]/g,"").trim();
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(clean); u.lang=voice?voice.lang:"ar-JO"; if(voice) u.voice=voice;
+  u.rate=slow?0.55:(S.prefs.slow?0.72:0.88); speechSynthesis.speak(u);
+}
+
+/* ======================= VIEWS ======================= */
+const ROUTES=["heute","sprechen","lesen","schreiben","woerter"];
+function route(){const h=location.hash.slice(1);return ROUTES.includes(h)?h:"heute";}
+let view={sprechen:{scene:null},lesen:{tab:"abc",sel:"ب",quiz:null},schreiben:{tab:"trace",item:"ب",build:null},woerter:{cat:"reakt",dir:"de",queue:null,flip:false}};
+
+function render(){
+  const r=route();
+  document.querySelectorAll("nav.tabs a").forEach(a=>a.setAttribute("aria-current",a.getAttribute("href")==="#"+r?"page":"false"));
+  $("#dial-pal").setAttribute("aria-pressed",String(!JO())); $("#dial-jo").setAttribute("aria-pressed",String(JO()));
+  ({heute:renderHome,sprechen:renderSpeak,lesen:renderRead,schreiben:renderWrite,woerter:renderWords})[r]();
+}
+
+/* ---- HEUTE ---- */
+function dailyPhrase(){
+  const pool=DAILY_POOL.flatMap(k=>VOCAB[k].items.filter(i=>i[3]));
+  const d=new Date(); const n=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5);
+  return vItem(pool[n%pool.length]);
+}
+function stats(){
+  const allCards=Object.values(VOCAB).reduce((a,c)=>a+c.items.length,0);
+  const known=Object.values(S.cards).filter(b=>b>=2).length;
+  return {
+    speak:[Object.keys(S.scenes).length,SCENES.length],
+    read:[Object.keys(S.letters).length,ALL_LETTERS.length],
+    write:[Object.keys(S.traced).length+Object.keys(S.built).length,ALL_LETTERS.length+TRACE_WORDS.length+BUILD_WORDS.length],
+    words:[known,allCards]
+  };
+}
+function renderHome(){
+  const p=dailyPhrase(), st=stats(), pct=([a,b])=>Math.round(a/b*100);
+  const last14=[...Array(14)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-(13-i));return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");});
+  const nextScene=SCENES.find(s=>!S.scenes[s.id])||SCENES[0];
+  $("#app").innerHTML=`
+  <section class="card hero">
+    <div class="row" style="justify-content:space-between"><span class="eyebrow">Satz des Tages</span><span class="pill ${JO()?"jo":""}">${JO()?"JORDANISCH":"PALÄSTINENSISCH"}</span></div>
+    <div class="big" lang="ar"><mark>${esc(p.ar)}</mark></div>
+    <div class="row">${sayBtn(p.ar)}${slowBtn(p.ar)}<span class="tline">${esc(p.tr)}</span></div>
+    <div><strong>${esc(p.de)}</strong><p class="ctx muted" style="margin:.3em 0 0">${esc(p.note)}</p>
+    ${p.other?`<p class="small muted" style="margin:.4em 0 0">${p.other.label}: <span class="ar" lang="ar">${esc(p.other.ar)}</span> <span class="tr">${esc(p.other.tr)}</span></p>`:""}</div>
+  </section>
+
+  <section class="grid">
+    <a class="card go" href="#sprechen"><h3>Sprechen <span class="ar" lang="ar">حكي</span></h3>
+      <span class="muted small">Weiter mit: ${esc(nextScene.title)}</span>
+      <div class="prog"><i style="width:${pct(st.speak)}%"></i></div><span class="small muted">${st.speak[0]} von ${st.speak[1]} Situationen</span></a>
+    <a class="card go" href="#lesen"><h3>Lesen <span class="ar" lang="ar">قراية</span></h3>
+      <span class="muted small">Buchstaben nach Formfamilien, dann echte Schilder</span>
+      <div class="prog"><i style="width:${pct(st.read)}%"></i></div><span class="small muted">${st.read[0]} von ${st.read[1]} Buchstaben angeschaut</span></a>
+    <a class="card go" href="#schreiben"><h3>Schreiben <span class="ar" lang="ar">كتابة</span></h3>
+      <span class="muted small">Nachzeichnen mit dem Finger, Wörter zusammensetzen</span>
+      <div class="prog"><i style="width:${pct(st.write)}%"></i></div><span class="small muted">${st.write[0]} von ${st.write[1]} Übungen</span></a>
+    <a class="card go" href="#woerter"><h3>Wörter <span class="ar" lang="ar">كلمات</span></h3>
+      <span class="muted small">Karteikarten mit Ausdrücken, die man wirklich hört</span>
+      <div class="prog"><i style="width:${pct(st.words)}%"></i></div><span class="small muted">${st.words[0]} von ${st.words[1]} sitzen</span></a>
+  </section>
+
+  <section class="card">
+    <div class="row" style="justify-content:space-between;margin-bottom:10px"><h2 style="font-size:1.15rem">Deine letzten 14 Tage</h2><span class="small muted">${S.days.length} Lerntage insgesamt</span></div>
+    <div class="streak" aria-label="Lerntage">${last14.map(d=>`<i class="${S.days.includes(d)?"on":""}" title="${d}"></i>`).join("")}</div>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <h2 style="font-size:1.15rem;margin-bottom:6px">Palästina oder Jordanien?</h2>
+      <p class="small muted" style="margin:0 0 8px">Beide sprechen Levantinisch und verstehen sich problemlos. Ein paar Wörter klingen anders. Oben rechts stellst du ein, welche Variante die App zeigt.</p>
+      <div class="tips small">
+        <div><b>Buchstabe ق</b><span>Stadt: <span class="tr">ahwe</span></span><span>Jordanien: <span class="tr">gahwa</span></span></div>
+        <div><b>„jetzt“</b><span><span class="tr">halla2</span></span><span><span class="tr">hassa</span></span></div>
+        <div><b>„wie viel?“</b><span><span class="tr">2addēsh</span></span><span><span class="tr">gaddēsh</span></span></div>
+        <div><b>„weiß nicht“</b><span><span class="tr">ba3rafish</span></span><span><span class="tr">ma ba3raf</span></span></div>
+        <div><b>Wortende ـة</b><span><span class="tr">knāfe</span></span><span><span class="tr">knāfa</span></span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2 style="font-size:1.15rem;margin-bottom:6px">So liest du die Umschrift</h2>
+      <p class="small muted" style="margin:0 0 10px">Wie auf WhatsApp: Zahlen stehen für Laute, die es im Deutschen nicht gibt.</p>
+      <div class="legend small">
+        <span><b>2</b> Stimmabsatz, wie in „be-enden“</span>
+        <span><b>3</b> <span class="ar" lang="ar">ع</span> gepresst aus der Kehle</span>
+        <span><b>7</b> <span class="ar" lang="ar">ح</span> kräftiges h</span>
+        <span><b>kh</b> <span class="ar" lang="ar">خ</span> wie „Bach“</span>
+        <span><b>gh</b> <span class="ar" lang="ar">غ</span> Rachen-r</span>
+        <span><b>ā ī ū</b> lang ziehen</span>
+      </div>
+      <label class="row small" style="margin-top:14px;gap:8px"><input type="checkbox" id="pref-slow" data-act="slowpref" ${S.prefs.slow?"checked":""}> Immer etwas langsamer vorlesen</label>
+    </div>
+  </section>`;
+}
+
+/* ---- SPRECHEN ---- */
+function renderSpeak(){
+  const v=view.sprechen;
+  if(!v.scene){
+    $("#app").innerHTML=`
+    <section><span class="eyebrow">Sprechen</span><h1 style="font-size:1.8rem;margin-top:4px">Echte Situationen, echte Antworten</h1>
+    <p class="muted" style="max-width:60ch;margin:.4em 0 0">Du bist mittendrin. Hör zu, wähl die passende Antwort und sag sie laut. Jede Antwort kannst du dir langsam vorsprechen lassen.</p></section>
+    <section class="grid scene-list">${SCENES.map(s=>`
+      <button class="card go" style="text-align:start" data-act="scene" data-id="${s.id}">
+        <h3>${esc(s.title)} ${S.scenes[s.id]?'<span class="done-tag">GESCHAFFT</span>':""}</h3>
+        <p class="small muted">${esc(s.place)}</p>
+        <p class="small"><span class="tr">${esc(vLine(s.lines.find(l=>!l.me)||s.lines[0]).tr)}</span></p>
+      </button>`).join("")}</section>`;
+    return;
+  }
+  const sc=SCENES.find(s=>s.id===v.scene.id), st=v.scene;
+  const bub=(l,me)=>{const L=vLine(l);return `<div class="bub ${me?"me":"them"}">${sayBtn(L.ar)}<div class="txt">
+      <span class="who">${me?"Du":esc(sc.who)}</span>
+      ${sc.chat?`<span class="tr">${esc(L.tr)}</span><span class="ar" lang="ar">${esc(L.ar)}</span>`:`<span class="ar" lang="ar">${esc(L.ar)}</span><span class="tr">${esc(L.tr)}</span>`}
+      ${S.prefs.showDe?`<span class="de small">${esc(L.de)}</span>`:""}</div></div>`;};
+  const cur=sc.lines[st.i];
+  let action="";
+  if(st.phase==="say"){
+    const L=vLine(sc.lines[st.i]);
+    action=`<div class="sayit"><span class="eyebrow">Jetzt du – sag es laut</span>
+      <span class="ar" lang="ar">${esc(L.ar)}</span><span class="tr">${esc(L.tr)}</span>
+      <div class="row">${sayBtn(L.ar)}${slowBtn(L.ar)}<button class="btn hi" data-act="said">Gesagt, weiter</button></div>
+      <span class="small muted">Tipp: Sprich zuerst mit, dann allein. Achte auf die Laute 3, 7 und 2.</span></div>`;
+  } else if(cur&&cur.me){
+    const L=vLine(cur);
+    const opts=st.opts||(st.opts=shuffle([{ok:1,ar:L.ar,tr:L.tr,de:L.de},...cur.wrong.map(w=>({ar:w[0],tr:w[1],de:w[2],why:w[3]}))]));
+    action=`<div><span class="eyebrow">Was antwortest du?</span></div>
+      <div class="opts">${opts.map((o,i)=>`<button class="opt ${st.wrong===i?"wrong":""}" data-act="opt" data-i="${i}"><span class="ar" lang="ar">${esc(o.ar)}</span><span class="tr">${esc(o.tr)}</span>${S.prefs.showDe?`<span class="de small">${esc(o.de)}</span>`:""}</button>`).join("")}</div>
+      ${st.wrong!=null?`<div class="feedback">${esc(opts[st.wrong].why)}</div>`:""}`;
+  } else if(!cur){
+    action=`<div class="feedback ok"><strong>Geschafft!</strong> ${st.mistakes?`${st.mistakes} Fehler unterwegs – nochmal üben lohnt sich.`:"Ohne einen Fehler. Stark."}</div>
+      <div class="row"><button class="btn" data-act="restart">Nochmal</button>${(()=>{const n=SCENES[SCENES.findIndex(s=>s.id===sc.id)+1];return n?`<button class="btn primary" data-act="scene" data-id="${n.id}">Nächste: ${esc(n.title)}</button>`:"";})()}<button class="btn ghost" data-act="back">Alle Situationen</button></div>`;
+  }
+  $("#app").innerHTML=`
+    <section class="scene-head"><div><button class="btn ghost small" data-act="back" style="padding:4px 8px;margin-bottom:6px">← Alle Situationen</button>
+      <h1 style="font-size:1.6rem">${esc(sc.title)}</h1><p class="muted small" style="margin:.2em 0 0">${esc(sc.place)}</p></div>
+      <label class="row small"><input type="checkbox" id="pref-de" data-act="showde" ${S.prefs.showDe?"checked":""}> Deutsch zeigen</label></section>
+    <section class="chat ${sc.chat?"chatstyle":""}" id="chat">${st.log.map(i=>bub(sc.lines[i],sc.lines[i].me)).join("")}</section>
+    <section style="display:flex;flex-direction:column;gap:10px">${action}</section>`;
+  const ch=$("#chat"); ch.lastElementChild&&ch.lastElementChild.scrollIntoView({block:"nearest",behavior:"smooth"});
+}
+function startScene(id){view.sprechen.scene={id,i:0,log:[],phase:null,opts:null,wrong:null,mistakes:0};advanceThem(true);}
+function advanceThem(first){
+  const st=view.sprechen.scene, sc=SCENES.find(s=>s.id===st.id); let lastThem=null;
+  while(st.i<sc.lines.length&&!sc.lines[st.i].me){st.log.push(st.i);lastThem=sc.lines[st.i];st.i++;}
+  if(lastThem) speak(vLine(lastThem).ar);
+  if(st.i>=sc.lines.length){S.scenes[sc.id]=1;touch();}
+  render();
+}
+
+/* ---- LESEN ---- */
+function forms(c){
+  const z="‍";
+  return NON_JOIN.has(c)?[["Allein",c],["Am Ende",z+c],["Anfang",null],["Mitte",null]]:[["Allein",c],["Anfang",c+z],["Mitte",z+c+z],["Am Ende",z+c]];
+}
+function renderRead(){
+  const v=view.lesen;
+  const tabs=`<div class="subtabs"><button class="chip" aria-pressed="${v.tab==="abc"}" data-act="rtab" data-v="abc">Alphabet</button><button class="chip" aria-pressed="${v.tab==="quiz"}" data-act="rtab" data-v="quiz">Lesen im Alltag</button></div>`;
+  if(v.tab==="abc"){
+    const L=ALL_LETTERS.find(l=>l.c===v.sel)||ALL_LETTERS[0];
+    const fm=forms(L.c);
+    $("#app").innerHTML=`
+    <section><span class="eyebrow">Lesen</span><h1 style="font-size:1.8rem;margin-top:4px">Buchstaben in Familien</h1>
+    <p class="muted" style="max-width:60ch;margin:.4em 0 10px">Viele arabische Buchstaben haben dieselbe Form – nur die Punkte unterscheiden sie. Lern sie als Familie, dann kennst du schnell das ganze Alphabet. Gelesen wird von rechts nach links.</p>${tabs}</section>
+    <section class="card ldetail">
+      <div class="lbig" lang="ar">${L.c}</div>
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+        <div class="row"><h2 style="font-size:1.4rem">${esc(L.n)}</h2>${sayBtn(L.ex[0],"Beispielwort anhören")}</div>
+        <div><strong>Laut:</strong> ${esc(L.s)}${L.d?`<div class="note" style="margin-top:6px">${esc(L.d)}</div>`:""}</div>
+        <div class="forms">${fm.map(([lab,f])=>`<div class="${f?"":"na"}"><span class="ar" lang="ar">${f?f:"–"}</span><small>${lab}</small></div>`).join("")}</div>
+        ${NON_JOIN.has(L.c)?'<span class="small muted">Verbindet sich nicht mit dem nächsten Buchstaben – danach beginnt eine neue Gruppe.</span>':""}
+        <div class="row"><span class="ar" lang="ar" style="font-size:1.6rem">${esc(L.ex[0])}</span><span class="tr">${esc(L.ex[1])}</span><span class="de">${esc(L.ex[2])}</span></div>
+      </div>
+    </section>
+    ${FAMILIES.map(f=>`<section class="fam"><div class="row" style="gap:8px;align-items:baseline"><h3 style="font-size:1rem">${esc(f.name)}</h3><span class="small muted">${esc(f.hint)}</span></div>
+      <div class="letters">${f.letters.map(l=>`<button class="lt ${S.letters[l.c]?"seen":""}" aria-pressed="${l.c===L.c}" data-act="letter" data-c="${l.c}" aria-label="${esc(l.n)}">${l.c}</button>`).join("")}</div></section>`).join("")}`;
+    return;
+  }
+  // quiz
+  if(!v.quiz) v.quiz=newQuiz();
+  const q=v.quiz, it=q.items[q.i];
+  if(!it){
+    S.quizBest=Math.max(S.quizBest,q.score); touch();
+    $("#app").innerHTML=`<section><span class="eyebrow">Lesen</span><h1 style="font-size:1.8rem;margin-top:4px">Lesen im Alltag</h1>${tabs}</section>
+      <section class="card" style="text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center">
+        <span class="score">${q.score} / ${q.items.length}</span><p class="muted" style="margin:0">${q.score>=8?"Damit kommst du durch jede Altstadt.":q.score>=5?"Gut! Schau dir die schwierigen Buchstaben im Alphabet nochmal an.":"Kein Problem – üb erst die Buchstabenfamilien, dann geht's leichter."}</p>
+        <span class="small muted">Bestes Ergebnis: ${S.quizBest} / 10</span><button class="btn primary" data-act="newquiz">Neue Runde</button></section>`;
+    return;
+  }
+  $("#app").innerHTML=`<section><span class="eyebrow">Lesen</span><h1 style="font-size:1.8rem;margin-top:4px">Lesen im Alltag</h1>
+    <p class="muted" style="max-width:60ch;margin:.4em 0 10px">Schilder, Speisekarten, Ortsnamen – das liest du draußen wirklich. Was steht da?</p>${tabs}</section>
+    <section class="card" style="display:flex;flex-direction:column;gap:14px">
+      <div class="row" style="justify-content:space-between"><span class="small muted">${q.i+1} von ${q.items.length}</span><span class="small muted">${q.score} richtig</span></div>
+      <div class="qcard k-${it[3]}"><div><div class="qkind">${KIND_LABEL[it[3]]}</div><div class="ar" lang="ar">${esc(it[0])}</div></div></div>
+      <div class="qopts">${q.opts.map((o,i)=>`<button class="opt ${q.answered!=null?(o===it?"right":(i===q.answered?"wrong":"")):""}" data-act="qopt" data-i="${i}" ${q.answered!=null?"disabled":""}><span class="tr">${esc(o[1])}</span><span class="de small">${esc(o[2])}</span></button>`).join("")}</div>
+      ${q.answered!=null?`<div class="row">${sayBtn(it[0])}<span class="small muted">${q.opts[q.answered]===it?"Richtig!":"Es heißt "+esc(it[1])+" – "+esc(it[2])+"."}</span><button class="btn primary" style="margin-inline-start:auto" data-act="qnext">Weiter</button></div>`:""}
+    </section>`;
+}
+function newQuiz(){
+  const items=shuffle(READ_ITEMS).slice(0,10);
+  const q={items,i:0,score:0,answered:null,opts:null}; q.opts=quizOpts(items[0]); return q;
+}
+function quizOpts(it){if(!it)return [];const same=READ_ITEMS.filter(x=>x!==it&&x[3]===it[3]);const other=READ_ITEMS.filter(x=>x!==it&&x[3]!==it[3]);return shuffle([it,...shuffle(same).slice(0,2),...shuffle(other).slice(0,1)]);}
+
+/* ---- SCHREIBEN ---- */
+function renderWrite(){
+  const v=view.schreiben;
+  const tabs=`<div class="subtabs"><button class="chip" aria-pressed="${v.tab==="trace"}" data-act="wtab" data-v="trace">Nachzeichnen</button><button class="chip" aria-pressed="${v.tab==="build"}" data-act="wtab" data-v="build">Wörter bauen</button></div>`;
+  const head=`<section><span class="eyebrow">Schreiben</span><h1 style="font-size:1.8rem;margin-top:4px">${v.tab==="trace"?"Mit dem Finger nachzeichnen":"Wörter zusammensetzen"}</h1>
+    <p class="muted" style="max-width:60ch;margin:.4em 0 10px">${v.tab==="trace"?"Fahr die graue Form nach – mit Finger, Stift oder Maus. Arabisch schreibst du von rechts nach links; Punkte kommen ganz zum Schluss.":"Tipp die Buchstaben in der richtigen Reihenfolge. Achte darauf, wie sie sich beim Zusammensetzen automatisch verbinden und ihre Form ändern."}</p>${tabs}</section>`;
+  if(v.tab==="trace"){
+    const items=[...ALL_LETTERS.map(l=>l.c),...TRACE_WORDS];
+    $("#app").innerHTML=head+`
+    <section class="card trace-wrap">
+      <div class="chips-scroll" id="tchips">${items.map(c=>`<button class="chip" aria-pressed="${c===v.item}" data-act="titem" data-c="${c}">${c}${S.traced[c]?" ✓":""}</button>`).join("")}</div>
+      <div class="pad" id="pad"><canvas id="guide"></canvas><canvas id="ink"></canvas></div>
+      <div class="row" style="justify-content:center">
+        <button class="btn" data-act="tclear">Löschen</button>
+        <button class="btn primary" data-act="tcheck">Prüfen</button>
+        <button class="btn" data-act="tnext">Nächstes →</button>
+        ${sayBtn(traceSpeakText(v.item))}
+      </div>
+      <div id="tres" class="row" style="justify-content:center;min-height:2.2em"></div>
+    </section>`;
+    const sel=$("#tchips [aria-pressed=true]"); if(sel) sel.scrollIntoView({inline:"center",block:"nearest"});
+    setupPad(v.item); return;
+  }
+  if(!v.build) v.build=newBuild();
+  const b=v.build, w=b.word;
+  const built=b.picked.map(i=>b.tiles[i]).join("");
+  $("#app").innerHTML=head+`
+  <section class="card" style="display:flex;flex-direction:column;gap:14px">
+    <div class="row" style="justify-content:space-between"><div><span class="eyebrow">Schreib auf Arabisch</span><div style="font-size:1.4rem;font-weight:600">${esc(w[2])} <span class="tr">${esc(w[1])}</span></div></div>${sayBtn(w[0])}</div>
+    <div class="slot ${b.state||""}" lang="ar">${built?esc(built):'<span class="small muted" style="font-family:var(--f-ui);direction:ltr">Hier entsteht dein Wort</span>'}</div>
+    ${b.state==="bad"?`<div class="feedback">Fast. Richtig ist <span class="ar" lang="ar" style="font-size:1.3rem">${esc(w[0])}</span> – Buchstaben: ${[...w[0]].join(" · ")}</div>`:""}
+    ${b.state==="ok"?`<div class="feedback ok">Richtig! Siehst du, wie sich die Buchstaben verbunden haben?</div>`:""}
+    <div class="tiles">${b.tiles.map((t,i)=>`<button class="tile" data-act="tile" data-i="${i}" ${b.picked.includes(i)||b.state?"disabled":""}>${t}</button>`).join("")}</div>
+    <div class="row" style="justify-content:center">
+      ${b.state?`<button class="btn primary" data-act="bnext">Nächstes Wort</button>`:`<button class="btn" data-act="bundo" ${b.picked.length?"":"disabled"}>Zurück</button><button class="btn primary" data-act="bcheck" ${b.picked.length?"":"disabled"}>Prüfen</button><button class="btn ghost" data-act="bnext">Überspringen</button>`}
+    </div>
+    <span class="small muted" style="text-align:center">${Object.keys(S.built).length} von ${BUILD_WORDS.length} Wörtern schon gebaut</span>
+  </section>`;
+}
+function traceSpeakText(c){const L=ALL_LETTERS.find(l=>l.c===c);return L?L.ex[0]:c;}
+function newBuild(){
+  const pool=BUILD_WORDS.filter(w=>!S.built[w[0]]); const w=shuffle(pool.length?pool:BUILD_WORDS)[0];
+  const letters=[...w[0]]; const extra=shuffle(ALL_LETTERS.map(l=>l.c).filter(c=>!letters.includes(c)&&c!=="ة")).slice(0,letters.length<=3?2:3);
+  return {word:w,tiles:shuffle([...letters,...extra]),picked:[],state:null};
+}
+
+/* trace pad */
+let pad=null;
+function cssVar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function setupPad(text){
+  const box=$("#pad"), g=$("#guide"), ink=$("#ink"); if(!box) return;
+  const dpr=Math.min(window.devicePixelRatio||1,2), size=box.clientWidth, W=Math.round(size*dpr);
+  [g,ink].forEach(c=>{c.width=W;c.height=W;});
+  const isWord=text.length>1;
+  const fontFor=ctx=>{let fs=W*(isWord?0.34:0.56);ctx.font=`500 ${fs}px "Noto Naskh Arabic"`;const m=ctx.measureText(text).width;if(m>W*0.82){fs*=W*0.82/m;ctx.font=`500 ${fs}px "Noto Naskh Arabic"`;}return fs;};
+  const drawGlyph=(ctx,color,extra)=>{ctx.save();ctx.direction="rtl";ctx.textAlign="center";ctx.textBaseline="middle";fontFor(ctx);ctx.fillStyle=color;ctx.fillText(text,W/2,W*0.5);
+    if(extra){ctx.strokeStyle=color;ctx.lineWidth=extra;ctx.lineJoin="round";ctx.strokeText(text,W/2,W*0.5);}ctx.restore();};
+  const draw=()=>{const ctx=g.getContext("2d");ctx.clearRect(0,0,W,W);drawGlyph(ctx,cssVar("--line"));};
+  pad={W,dpr,text,strokes:[],drawGlyph,ink};
+  (document.fonts&&document.fonts.load?document.fonts.load(`40px "Noto Naskh Arabic"`,text):Promise.resolve()).then(draw,draw);
+  const ctx=ink.getContext("2d");
+  const pt=e=>{const r=ink.getBoundingClientRect();return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*W/r.height];};
+  let drawing=false;
+  ink.onpointerdown=e=>{drawing=true;ink.setPointerCapture(e.pointerId);pad.strokes.push([pt(e)]);$("#tres").innerHTML="";};
+  ink.onpointermove=e=>{if(!drawing)return;const s=pad.strokes[pad.strokes.length-1];const p=pt(e);const q=s[s.length-1];s.push(p);
+    ctx.strokeStyle=cssVar("--olive");ctx.lineWidth=W*0.04;ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();ctx.moveTo(q[0],q[1]);ctx.lineTo(p[0],p[1]);ctx.stroke();};
+  ink.onpointerup=ink.onpointercancel=()=>{drawing=false;};
+}
+function scoreTrace(){
+  if(!pad||!pad.strokes.length){toast("Zeichne zuerst die Form nach.");return;}
+  const {W,strokes,drawGlyph}=pad;
+  const mk=()=>{const c=document.createElement("canvas");c.width=W;c.height=W;return c.getContext("2d");};
+  const glyph=mk(); drawGlyph(glyph,"#000");
+  const glyphWide=mk(); drawGlyph(glyphWide,"#000",W*0.05);
+  const inkWide=mk(), inkThin=mk();
+  for(const [ctx,lw] of [[inkWide,W*0.09],[inkThin,W*0.03]]){ctx.strokeStyle="#000";ctx.lineWidth=lw;ctx.lineCap="round";ctx.lineJoin="round";
+    for(const s of strokes){ctx.beginPath();ctx.moveTo(s[0][0],s[0][1]);for(const p of s)ctx.lineTo(p[0],p[1]);ctx.stroke();}}
+  const A=c=>c.getImageData(0,0,W,W).data; const g=A(glyph),gw=A(glyphWide),iw=A(inkWide),it=A(inkThin);
+  let G=0,cov=0,I=0,out=0; const step=3*4;
+  for(let y=0;y<W;y+=3)for(let x=0;x<W;x+=3){const k=(y*W+x)*4+3;
+    if(g[k]>100){G++;if(iw[k]>100)cov++;}
+    if(it[k]>100){I++;if(gw[k]<100)out++;}}
+  const coverage=G?cov/G:0, outside=I?out/I:1;
+  const score=Math.max(0,Math.min(100,Math.round(coverage*110-outside*70)));
+  const msg=score>=75?"Sehr sauber!":score>=50?"Gut – versuch's noch etwas genauer.":"Fahr die graue Form genauer nach.";
+  $("#tres").innerHTML=`<span class="score" style="color:${score>=50?"var(--ok)":"var(--sumac)"}">${score}</span><span class="muted">${msg}</span>`;
+  if(score>=50){S.traced[pad.text]=1;touch();
+    const chip=document.querySelector(`#tchips [data-c="${CSS.escape(pad.text)}"]`); if(chip&&!chip.textContent.includes("✓")) chip.textContent+=" ✓";}
+}
+
+/* ---- WÖRTER ---- */
+function cardId(cat,i){return cat+":"+i;}
+function buildQueue(cat){
+  const items=VOCAB[cat].items.map((it,i)=>({cat,i,box:S.cards[cardId(cat,i)]||0}));
+  return shuffle(items).sort((a,b)=>a.box-b.box).map(x=>x.i);
+}
+function renderWords(){
+  const v=view.woerter, cat=VOCAB[v.cat];
+  if(!v.queue||!v.queue.length) v.queue=buildQueue(v.cat);
+  const idx=v.queue[0], it=vItem(cat.items[idx]), box=S.cards[cardId(v.cat,idx)]||0;
+  const known=cat.items.filter((_,i)=>(S.cards[cardId(v.cat,i)]||0)>=2).length;
+  const boxes=b=>`<span class="boxes" title="Lernstufe ${b} von 4">${[1,2,3,4].map(n=>`<i class="${b>=n?"on":""}"></i>`).join("")}</span>`;
+  const deFront=v.dir==="de";
+  $("#app").innerHTML=`
+  <section><span class="eyebrow">Wörter</span><h1 style="font-size:1.8rem;margin-top:4px">Was man wirklich sagt</h1>
+    <p class="muted" style="max-width:60ch;margin:.4em 0 10px">Keine Lehrbuch-Sätze, sondern das, was du auf der Straße, im Taxi und bei der Familie hörst. Karte antippen zum Umdrehen.</p>
+    <div class="subtabs">${Object.entries(VOCAB).map(([k,c])=>`<button class="chip" aria-pressed="${k===v.cat}" data-act="cat" data-v="${k}">${esc(c.name)}</button>`).join("")}</div></section>
+  <section class="card" style="display:flex;flex-direction:column;gap:12px">
+    <div class="row" style="justify-content:space-between"><span class="small muted">${known} von ${cat.items.length} sitzen</span>
+      <div class="seg" role="group" aria-label="Richtung"><button data-act="dir" data-v="de" aria-pressed="${deFront}">Deutsch → Arabisch</button><button data-act="dir" data-v="ar" aria-pressed="${!deFront}">Arabisch → Deutsch</button></div></div>
+    <div class="flash" data-act="flip" role="button" tabindex="0" aria-label="Karte umdrehen">
+      ${deFront?`<div class="front">${esc(it.de)}</div>`:`<div class="ar" lang="ar">${esc(it.ar)}</div>`}
+      ${v.flip?(deFront?`<div class="ar" lang="ar">${esc(it.ar)}</div><div class="tr">${esc(it.tr)}</div>`:`<div class="tr">${esc(it.tr)}</div><div class="front">${esc(it.de)}</div>`)
+        +(it.note?`<div class="note" style="text-align:start;max-width:44ch">${esc(it.note)}</div>`:"")
+        +(it.other?`<div class="small muted">${it.other.label}: <span class="ar" lang="ar">${esc(it.other.ar)}</span> <span class="tr">${esc(it.other.tr)}</span></div>`:"")
+        :`<div class="hint">Antippen zum Aufdecken</div>`}
+    </div>
+    <div class="row" style="justify-content:center">
+      ${sayBtn(it.ar)}
+      ${v.flip?`<button class="btn" data-act="again">Nochmal</button><button class="btn hi" data-act="know">Kann ich</button>`:`<button class="btn primary" data-act="flip">Aufdecken</button>`}
+      ${boxes(box)}
+    </div>
+  </section>
+  <section class="card"><h2 style="font-size:1.1rem;margin-bottom:6px">Alle: ${esc(cat.name)}</h2>
+    <div class="list">${cat.items.map((raw,i)=>{const x=vItem(raw);return `<div class="li">${sayBtn(x.ar)}<div class="meta"><span class="ar" lang="ar" style="text-align:start">${esc(x.ar)}</span><span class="tr">${esc(x.tr)}</span></div><span class="de small">${esc(x.de)} ${boxes(S.cards[cardId(v.cat,i)]||0)}</span></div>`;}).join("")}</div></section>`;
+}
+
+/* ======================= EVENTS ======================= */
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-act]"); if(!el) return;
+  const a=el.dataset.act, V=view;
+  switch(a){
+    case "say": e.stopPropagation(); speak(el.dataset.t,!!el.dataset.slow); break;
+    case "dial": S.prefs.dial=el.dataset.v; save(); render(); toast(JO()?"Jordanische Variante: q wird zu g, „jetzt“ heißt hassa.":"Palästinensische Variante: q wird zum Stimmabsatz, „jetzt“ heißt halla2."); break;
+    case "slowpref": S.prefs.slow=el.checked; save(); break;
+    case "showde": S.prefs.showDe=el.checked; save(); render(); break;
+    case "scene": startScene(el.dataset.id); window.scrollTo({top:0}); break;
+    case "back": V.sprechen.scene=null; render(); break;
+    case "restart": startScene(V.sprechen.scene.id); break;
+    case "opt":{const st=V.sprechen.scene,o=st.opts[+el.dataset.i];
+      if(o.ok){st.log.push(st.i);st.phase="say";st.wrong=null;speak(o.ar);}
+      else{st.wrong=+el.dataset.i;st.mistakes++;}
+      render();break;}
+    case "said":{const st=V.sprechen.scene;st.phase=null;st.opts=null;st.wrong=null;st.i++;advanceThem();break;}
+    case "rtab": V.lesen.tab=el.dataset.v; render(); break;
+    case "letter": V.lesen.sel=el.dataset.c; S.letters[el.dataset.c]=1; touch(); render(); speak(ALL_LETTERS.find(l=>l.c===el.dataset.c).ex[0]); break;
+    case "qopt":{const q=V.lesen.quiz;q.answered=+el.dataset.i;const it=q.items[q.i];if(q.opts[q.answered]===it)q.score++;speak(it[0]);render();break;}
+    case "qnext":{const q=V.lesen.quiz;q.i++;q.answered=null;q.opts=quizOpts(q.items[q.i]);render();break;}
+    case "newquiz": V.lesen.quiz=newQuiz(); render(); break;
+    case "wtab": V.schreiben.tab=el.dataset.v; render(); break;
+    case "titem": V.schreiben.item=el.dataset.c; render(); break;
+    case "tclear": setupPad(V.schreiben.item); $("#tres").innerHTML=""; break;
+    case "tcheck": scoreTrace(); break;
+    case "tnext":{const items=[...ALL_LETTERS.map(l=>l.c),...TRACE_WORDS];V.schreiben.item=items[(items.indexOf(V.schreiben.item)+1)%items.length];render();break;}
+    case "tile": V.schreiben.build.picked.push(+el.dataset.i); render(); break;
+    case "bundo": V.schreiben.build.picked.pop(); render(); break;
+    case "bcheck":{const b=V.schreiben.build;const s=b.picked.map(i=>b.tiles[i]).join("");b.state=s===b.word[0]?"ok":"bad";if(b.state==="ok"){S.built[b.word[0]]=1;touch();speak(b.word[0]);}render();break;}
+    case "bnext": V.schreiben.build=newBuild(); render(); break;
+    case "cat": V.woerter.cat=el.dataset.v; V.woerter.queue=null; V.woerter.flip=false; render(); break;
+    case "dir": V.woerter.dir=el.dataset.v; V.woerter.flip=false; render(); break;
+    case "flip": if(!V.woerter.flip){V.woerter.flip=true; render(); const w=V.woerter; speak(vItem(VOCAB[w.cat].items[w.queue[0]]).ar);} break;
+    case "know": case "again":{const w=V.woerter,id=cardId(w.cat,w.queue[0]);
+      S.cards[id]=a==="know"?Math.min(4,(S.cards[id]||0)+1):0; touch();
+      const cur=w.queue.shift(); if(a==="again") w.queue.splice(Math.min(3,w.queue.length),0,cur);
+      w.flip=false; render(); break;}
+  }
+});
+document.addEventListener("keydown",e=>{
+  if(e.key===" "||e.key==="Enter"){const el=e.target.closest&&e.target.closest(".flash");if(el){e.preventDefault();el.click();}}
+});
+window.addEventListener("hashchange",()=>{render();window.scrollTo({top:0});});
+let rzT; window.addEventListener("resize",()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(route()==="schreiben"&&view.schreiben.tab==="trace") setupPad(view.schreiben.item);},200);});
+render();
+</script>

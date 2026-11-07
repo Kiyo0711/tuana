@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <pattern id="st" width="44" height="20" patternUnits="userSpaceOnUse">
+      <path d="M4 4l12 12M16 4L4 16" stroke="#E9B10E" stroke-width="3.6" stroke-linecap="round"/>
+      <path d="M30 10l6-6 6 6-6 6z" fill="#A3343B"/>
+    </pattern>
+  </defs>
+  <rect width="512" height="512" fill="#2F3D22"/>
+  <rect x="0" y="380" width="512" height="20" fill="url(#st)"/>
+  <rect x="0" y="100" width="512" height="20" fill="url(#st)"/>
+  <text x="256" y="332" text-anchor="middle" font-family="Geeza Pro, Al Bayan, Arial" font-size="250" font-weight="700" fill="#F8F7F3">ت</text>
+</svg>
